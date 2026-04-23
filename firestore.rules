@@ -1,0 +1,63 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global Deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isTeacher() {
+      return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'teacher';
+    }
+
+    function isMyStudent(studentId) {
+      return isTeacher() && resource.data.joinedTeacherId == request.auth.uid;
+    }
+
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isMyStudent(userId);
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId) && (
+        // Allow updating role, profile info, and teacher links
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['role', 'displayName', 'photoURL', 'joinedTeacherId', 'teacherCode'])
+      );
+
+      match /stats/{unitId} {
+        allow read: if isOwner(userId) || isMyStudent(userId);
+        allow write: if isOwner(userId);
+      }
+    }
+
+    match /teacher_codes/{code} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && (
+        // Verify this code is being linked to the authenticated user
+        request.resource.data.userId == request.auth.uid
+      );
+    }
+
+    function isValidWordCache(data) {
+      return data.definition is string && data.definition.size() <= 2000 &&
+             data.hint is string && data.hint.size() <= 1000 &&
+             data.uz is string && data.uz.size() <= 1000 &&
+             data.ru is string && data.ru.size() <= 1000;
+    }
+
+    match /word_cache/{word} {
+      allow read: if isSignedIn();
+      allow create, update: if isSignedIn() && isValidWordCache(request.resource.data);
+    }
+
+    match /test/connection {
+      allow read: if true;
+    }
+  }
+}

@@ -12,27 +12,27 @@ interface DashboardProps {
   units: Unit[];
   onUnitSelect: (unit: Unit) => void;
   unitStats: Record<number, { masteredWords: string[]; gamesPlayed: number }>;
+  userName?: string;
 }
 
-export default function Dashboard({ units, onUnitSelect, unitStats }: DashboardProps) {
+export default function Dashboard({ units, onUnitSelect, unitStats, userName }: DashboardProps) {
   return (
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
-      className="space-y-8"
+      className="space-y-6 sm:space-y-12"
     >
-      <div className="flex flex-col gap-2">
-        <h2 className="text-3xl font-extrabold tracking-tight text-text-primary sm:text-4xl">
-          Welcome back, Learner
+      <div className="flex flex-col gap-1.5 sm:gap-2">
+        <h2 className="text-2xl sm:text-5xl font-black tracking-tight text-text-primary uppercase italic leading-[1.1] sm:leading-none">
+          Welcome back, <span className="text-accent">{userName || 'Learner'}</span>
         </h2>
-        <p className="text-lg text-text-secondary max-w-2xl">
-          Select a unit to start building your vocabulary. Each unit contains 
-          themed words and interactive games to master them.
+        <p className="text-xs sm:text-lg text-text-secondary max-w-2xl font-medium tracking-tight opacity-80">
+          Select a unit to start building your vocabulary.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {units.map((unit, index) => {
           const stats = unitStats[unit.id] || { masteredWords: [], gamesPlayed: 0 };
           const progress = Math.round((stats.masteredWords.length / unit.words.length) * 100);
@@ -44,7 +44,7 @@ export default function Dashboard({ units, onUnitSelect, unitStats }: DashboardP
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
               onClick={() => onUnitSelect(unit)}
-              className="group relative bg-surface p-6 rounded-2xl border border-border shadow-sm hover:shadow-cyan-500/10 hover:shadow-xl hover:border-accent transition-all cursor-pointer overflow-hidden glass-card"
+              className="group relative bg-surface p-4 sm:p-6 rounded-2xl border border-border shadow-sm hover:shadow-cyan-500/10 hover:shadow-xl hover:border-accent transition-all cursor-pointer overflow-hidden glass-card"
             >
               <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
                 <BookMarked size={120} className="text-accent rotate-12" />

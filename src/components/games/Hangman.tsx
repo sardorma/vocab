@@ -5,9 +5,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ChevronLeft, RotateCcw, AlertCircle, Skull, Lightbulb, Sparkles } from 'lucide-react';
+import { ChevronLeft, RotateCcw, AlertCircle, Skull, Lightbulb, Sparkles, Volume2 } from 'lucide-react';
 import { Unit } from '../../data/vocabulary.ts';
 import { getWordInfo } from '../../services/geminiService.ts';
+import { useTTS } from '../../hooks/useTTS';
 
 interface HangmanProps {
   unit: Unit;
@@ -21,6 +22,7 @@ interface HangmanProps {
 export default function Hangman({ unit, onBack, onWordMastered, onGameFinished, wordCache, onUpdateWordCache }: HangmanProps) {
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [guessedLetters, setGuessedLetters] = useState<string[]>([]);
+  const { speak } = useTTS();
   const [mistakes, setMistakes] = useState(0);
   const [status, setStatus] = useState<'playing' | 'won' | 'lost'>('playing');
   const [wordInfo, setWordInfo] = useState<{ definition: string; hint: string; uz: string; ru: string } | null>(null);
@@ -137,10 +139,10 @@ export default function Hangman({ unit, onBack, onWordMastered, onGameFinished, 
         )}
       </AnimatePresence>
 
-      <div className="bg-surface rounded-3xl border-2 border-border shadow-2xl overflow-hidden min-h-[500px] flex flex-col md:flex-row glass-card">
+      <div className="bg-surface rounded-3xl border-2 border-border shadow-2xl overflow-hidden min-h-[400px] sm:min-h-[500px] flex flex-col md:flex-row glass-card">
         {/* Visual Panel */}
-        <div className="w-full md:w-1/3 p-8 bg-bg flex items-center justify-center relative border-b md:border-b-0 md:border-r border-border">
-          <div className="text-white font-mono">
+        <div className="w-full md:w-1/3 p-4 sm:p-8 bg-bg flex items-center justify-center relative border-b md:border-b-0 md:border-r border-border min-h-[150px] sm:min-h-0">
+          <div className="text-white font-mono scale-75 sm:scale-100">
             <svg width="150" height="200" viewBox="0 0 150 200" className="stroke-accent stroke-[4] fill-none drop-shadow-[0_0_8px_rgba(34,211,238,0.4)]">
               {/* Stand */}
               <line x1="20" y1="180" x2="100" y2="180" className="stroke-border" />
@@ -158,17 +160,28 @@ export default function Hangman({ unit, onBack, onWordMastered, onGameFinished, 
             </svg>
           </div>
           
-          <div className="absolute top-4 left-4 p-2 bg-white/5 rounded-lg text-text-secondary border border-border">
-            <Skull size={20} />
+          <div className="absolute top-2 left-2 sm:top-4 sm:left-4 p-1.5 sm:p-2 bg-white/5 rounded-lg text-text-secondary border border-border">
+            <Skull size={16} className="sm:hidden" />
+            <Skull size={20} className="hidden sm:block" />
           </div>
         </div>
 
         {/* Interaction Panel */}
-        <div className="flex-1 p-8 space-y-12">
-          <div className="text-center">
-            <div className="flex justify-center flex-wrap gap-2 mb-2">
+        <div className="flex-1 p-4 sm:p-8 space-y-6 sm:space-y-12">
+          <div className="text-center relative">
+            <div className="absolute -top-1 sm:-top-4 right-0">
+               <button 
+                 onClick={() => speak(currentWord)}
+                 className="p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-accent/10 text-accent border border-accent/20 hover:bg-accent/20 transition-all hover:scale-110 active:scale-95 shadow-[0_0_10px_rgba(34,211,238,0.1)]"
+                 title="Hear word"
+               >
+                 <Volume2 size={20} className="sm:hidden" />
+                 <Volume2 size={24} className="hidden sm:block" />
+               </button>
+            </div>
+            <div className="flex justify-center flex-wrap gap-1 sm:gap-2 mb-2">
               {displayWord.map((char, i) => (
-                <div key={i} className="w-8 sm:w-10 h-12 border-b-4 border-border flex items-center justify-center text-2xl font-black uppercase text-text-primary">
+                <div key={i} className="w-5 min-[400px]:w-8 sm:w-10 h-10 sm:h-12 border-b-2 sm:border-b-4 border-border flex items-center justify-center text-base sm:text-2xl font-black uppercase text-text-primary">
                   {char === "_" ? "" : char}
                 </div>
               ))}
@@ -176,13 +189,13 @@ export default function Hangman({ unit, onBack, onWordMastered, onGameFinished, 
           </div>
 
           {status === 'playing' ? (
-            <div className="grid grid-cols-6 sm:grid-cols-9 gap-2">
+            <div className="grid grid-cols-6 sm:grid-cols-9 gap-1.5 sm:gap-2">
               {alphabet.map(letter => (
                 <button
                   key={letter}
                   disabled={guessedLetters.includes(letter)}
                   onClick={() => handleGuess(letter)}
-                  className={`h-11 rounded-lg text-xs font-bold transition-all uppercase tracking-widest ${
+                  className={`h-9 sm:h-11 rounded-lg text-[10px] sm:text-xs font-bold transition-all uppercase tracking-widest ${
                     guessedLetters.includes(letter)
                       ? currentWord.includes(letter) 
                         ? 'bg-accent/10 text-accent border border-accent/20'
@@ -195,21 +208,22 @@ export default function Hangman({ unit, onBack, onWordMastered, onGameFinished, 
               ))}
             </div>
           ) : (
-            <div className={`p-8 rounded-2xl text-center space-y-6 ${status === 'won' ? 'bg-accent/5 text-accent' : 'bg-highlight/5 text-highlight'} border-2 ${status === 'won' ? 'border-accent/20' : 'border-highlight/20'} glass-card`}>
-              <div className="flex flex-col items-center gap-3">
-                {status === 'won' ? <Sparkles size={48} className="text-accent" /> : <Skull size={48} className="text-highlight" />}
-                <h3 className="text-3xl font-black tracking-tight uppercase tracking-widest">
+            <div className={`p-4 sm:p-8 rounded-2xl text-center space-y-4 sm:space-y-6 ${status === 'won' ? 'bg-accent/5 text-accent' : 'bg-highlight/5 text-highlight'} border-2 ${status === 'won' ? 'border-accent/20' : 'border-highlight/20'} glass-card`}>
+              <div className="flex flex-col items-center gap-2 sm:gap-3">
+                {status === 'won' ? <Sparkles size={32} className="text-accent sm:hidden" /> : <Skull size={32} className="text-highlight sm:hidden" />}
+                {status === 'won' ? <Sparkles size={48} className="text-accent hidden sm:block" /> : <Skull size={48} className="text-highlight hidden sm:block" />}
+                <h3 className="text-xl sm:text-3xl font-black tracking-tight uppercase tracking-widest leading-none">
                   {status === 'won' ? 'Victory!' : 'Terminated'}
                 </h3>
-                <p className="font-medium text-text-primary">
-                  {status === 'won' ? "Sequence secured! Next task awaiting." : `Target word was: ${currentWord}`}
+                <p className="text-sm font-medium text-text-primary">
+                  {status === 'won' ? "Sequence secured!" : `Word was: ${currentWord}`}
                 </p>
               </div>
               <button 
                 onClick={resetGame}
-                className={`w-full py-5 px-6 rounded-full font-black flex items-center justify-center gap-2 transition-all uppercase tracking-[0.2em] shadow-lg ${status === 'won' ? 'bg-accent text-bg hover:bg-white' : 'bg-highlight text-bg hover:bg-white'}`}
+                className={`w-full py-4 sm:py-5 px-6 rounded-full font-black flex items-center justify-center gap-2 transition-all uppercase tracking-[0.2em] shadow-lg text-xs sm:text-base ${status === 'won' ? 'bg-accent text-bg hover:bg-white' : 'bg-highlight text-bg hover:bg-white'}`}
               >
-                <RotateCcw size={20} /> REBOOT SEQUENCE
+                <RotateCcw size={18} className="sm:size-5" /> REBOOT SEQUENCE
               </button>
             </div>
           )}

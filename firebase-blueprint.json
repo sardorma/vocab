@@ -1,0 +1,65 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "User account information and role.",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "role": { "type": "string", "enum": ["student", "teacher"] },
+        "teacherId": { "type": "string", "description": "UID of the teacher if user is a student" }
+      },
+      "required": ["email", "role"]
+    },
+    "UnitStats": {
+      "title": "Unit Progress",
+      "description": "Statistics for a specific vocabulary unit.",
+      "type": "object",
+      "properties": {
+        "masteredWords": { 
+          "type": "array", 
+          "items": { "type": "string" }
+        },
+        "gamesPlayed": { "type": "integer" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "WordCache": {
+      "title": "Word Definition Cache",
+      "description": "Cached translations and definitions from Gemini.",
+      "type": "object",
+      "properties": {
+        "definition": { "type": "string" },
+        "hint": { "type": "string" },
+        "uz": { "type": "string" },
+        "ru": { "type": "string" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "TeacherCode": {
+      "title": "Teacher Code Registry",
+      "properties": {
+        "userId": { "type": "string" }
+      }
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Root user document."
+    },
+    "/users/{userId}/stats/{unitId}": {
+      "schema": "UnitStats",
+      "description": "Progress per unit for a user."
+    },
+    "/word_cache/{word}": {
+      "schema": "WordCache",
+      "description": "Global cache for word information."
+    },
+    "/teacher_codes/{code}": {
+      "schema": "TeacherCode",
+      "description": "Mapping of human-readable teacher codes to UIDs."
+    }
+  }
+}

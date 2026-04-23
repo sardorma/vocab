@@ -5,9 +5,21 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ChevronLeft, Send, Sparkles, AlertCircle, CheckCircle2, RotateCcw, Lightbulb, Trophy, Brain } from 'lucide-react';
+import { 
+  ChevronLeft, 
+  Send, 
+  Sparkles, 
+  AlertCircle, 
+  CheckCircle2, 
+  RotateCcw, 
+  Lightbulb, 
+  Trophy, 
+  Brain,
+  Volume2
+} from 'lucide-react';
 import { Unit } from '../../data/vocabulary.ts';
 import { getWordInfo } from '../../services/geminiService.ts';
+import { useTTS } from '../../hooks/useTTS';
 
 interface SpellingSprintProps {
   unit: Unit;
@@ -23,6 +35,8 @@ export default function SpellingSprint({ unit, onBack, onWordMastered, onGameFin
   const [userInput, setUserInput] = useState('');
   const [wordInfo, setWordInfo] = useState<{ definition: string; hint: string; uz: string; ru: string } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const { speak } = useTTS();
+
   const [feedback, setFeedback] = useState<'none' | 'correct' | 'wrong'>('none');
   const [score, setScore] = useState(0);
   const [showHint, setShowHint] = useState(false);
@@ -138,7 +152,7 @@ export default function SpellingSprint({ unit, onBack, onWordMastered, onGameFin
           <p className="text-text-secondary text-sm">Decode the definition using the provided hint</p>
         </div>
 
-        <div className="p-8 space-y-8">
+        <div className="p-4 sm:p-8 space-y-4 sm:space-y-8">
           <AnimatePresence mode="wait">
             {isLoading ? (
               <motion.div 
@@ -146,34 +160,45 @@ export default function SpellingSprint({ unit, onBack, onWordMastered, onGameFin
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="flex flex-col items-center justify-center py-12 gap-4"
+                className="flex flex-col items-center justify-center py-8 sm:py-12 gap-3 sm:gap-4"
               >
-                <div className="w-12 h-12 border-4 border-accent border-t-transparent rounded-full animate-spin"></div>
-                <p className="text-text-secondary font-mono animate-pulse uppercase tracking-widest text-xs">AI Processing...</p>
+                <div className="w-10 h-10 sm:w-12 sm:h-12 border-4 border-accent border-t-transparent rounded-full animate-spin"></div>
+                <p className="text-text-secondary font-mono animate-pulse uppercase tracking-widest text-[9px] sm:text-xs">AI Processing...</p>
               </motion.div>
             ) : (
               <motion.div 
                 key="content"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="space-y-6"
+                className="space-y-4 sm:space-y-6"
               >
-                <div className="text-center space-y-4">
-                  <div className="inline-flex p-3 rounded-full bg-surface border border-border text-accent shadow-[0_0_15px_rgba(34,211,238,0.1)]">
-                    <Brain size={32} />
+                <div className="text-center space-y-3 sm:space-y-4">
+                  <div className="flex items-center justify-center gap-3 sm:gap-4">
+                    <div className="inline-flex p-2 sm:p-3 rounded-full bg-surface border border-border text-accent shadow-[0_0_15px_rgba(34,211,238,0.1)]">
+                      <Brain size={24} className="sm:hidden" />
+                      <Brain size={32} className="hidden sm:block" />
+                    </div>
+                    <button 
+                      onClick={() => speak(currentWord)}
+                      className="p-2 sm:p-3 rounded-full bg-accent/10 text-accent border border-accent/20 hover:bg-accent/20 transition-all hover:scale-110 active:scale-95 shadow-[0_0_15px_rgba(34,211,238,0.1)]"
+                      title="Hear pronunciation"
+                    >
+                      <Volume2 size={24} className="sm:hidden" />
+                      <Volume2 size={32} className="hidden sm:block" />
+                    </button>
                   </div>
-                  <div className="space-y-4">
-                    <p className="text-xl font-medium text-text-primary leading-relaxed italic px-4">
+                  <div className="space-y-3 sm:space-y-4">
+                    <p className="text-lg sm:text-xl font-medium text-text-primary leading-relaxed italic px-2 sm:px-4">
                       "{wordInfo?.definition}"
                     </p>
                     {/* Translations */}
-                    <div className="flex flex-wrap justify-center gap-3">
-                       <div className="px-4 py-2 bg-accent/5 border border-accent/20 rounded-xl text-sm font-bold">
-                         <span className="text-text-secondary block text-[10px] uppercase tracking-tighter opacity-50 mb-0.5">UZBEK</span>
+                    <div className="flex flex-wrap justify-center gap-2 sm:gap-3">
+                       <div className="px-3 sm:px-4 py-1.5 sm:py-2 bg-accent/5 border border-accent/20 rounded-xl text-xs sm:text-sm font-bold">
+                         <span className="text-text-secondary block text-[8px] sm:text-[10px] uppercase tracking-tighter opacity-50 mb-0.5">UZBEK</span>
                          <span className="text-accent">{wordInfo?.uz}</span>
                        </div>
-                       <div className="px-4 py-2 bg-highlight/5 border border-highlight/20 rounded-xl text-sm font-bold">
-                         <span className="text-text-secondary block text-[10px] uppercase tracking-tighter opacity-50 mb-0.5">RUSSIAN</span>
+                       <div className="px-3 sm:px-4 py-1.5 sm:py-2 bg-highlight/5 border border-highlight/20 rounded-xl text-xs sm:text-sm font-bold">
+                         <span className="text-text-secondary block text-[8px] sm:text-[10px] uppercase tracking-tighter opacity-50 mb-0.5">RUSSIAN</span>
                          <span className="text-highlight">{wordInfo?.ru}</span>
                        </div>
                     </div>
@@ -188,8 +213,8 @@ export default function SpellingSprint({ unit, onBack, onWordMastered, onGameFin
                       autoComplete="off"
                       value={userInput}
                       onInput={(e: any) => setUserInput(e.target.value)}
-                      placeholder="Type the word!"
-                      className={`w-full text-center text-4xl font-black py-8 px-4 bg-bg border-4 rounded-2xl outline-none transition-all uppercase tracking-[0.2em] ${
+                      placeholder="Type!"
+                      className={`w-full text-center text-xl sm:text-4xl font-black py-5 sm:py-8 px-4 bg-bg border-4 rounded-2xl outline-none transition-all uppercase tracking-tight sm:tracking-[0.2em] ${
                         feedback === 'correct' ? 'border-accent bg-accent/5' : 
                         feedback === 'wrong' ? 'border-highlight bg-highlight/5 animate-shake' : 
                         'border-border focus:border-accent focus:bg-surface'

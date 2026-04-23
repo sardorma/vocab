@@ -5,9 +5,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ChevronLeft, RotateCcw, Shuffle, Sparkles, CheckCircle2, Lightbulb, Trophy } from 'lucide-react';
+import { ChevronLeft, RotateCcw, Shuffle, Sparkles, CheckCircle2, Lightbulb, Trophy, Volume2 } from 'lucide-react';
 import { Unit } from '../../data/vocabulary.ts';
 import { getWordInfo } from '../../services/geminiService.ts';
+import { useTTS } from '../../hooks/useTTS';
 
 interface WordScrambleProps {
   unit: Unit;
@@ -22,6 +23,7 @@ export default function WordScramble({ unit, onBack, onWordMastered, onGameFinis
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [scrambledWord, setScrambledWord] = useState('');
   const [userInput, setUserInput] = useState('');
+  const { speak } = useTTS();
   const [feedback, setFeedback] = useState<'none' | 'correct' | 'wrong'>('none');
   const [score, setScore] = useState(0);
   const [wordInfo, setWordInfo] = useState<{ definition: string; hint: string; uz: string; ru: string } | null>(null);
@@ -133,9 +135,16 @@ export default function WordScramble({ unit, onBack, onWordMastered, onGameFinis
       </div>
 
       <div className="bg-surface rounded-3xl border-2 border-border shadow-2xl overflow-hidden glass-card">
-        <div className="bg-bg p-8 text-center border-b border-border text-text-primary relative">
-          <h2 className="text-3xl font-black tracking-widest uppercase text-highlight mb-2">Word Scramble</h2>
-          <p className="text-text-secondary text-sm italic">
+        <div className="bg-bg p-4 sm:p-8 text-center border-b border-border text-text-primary relative group/word">
+          <button 
+            onClick={() => speak(currentWord)}
+            className="absolute top-4 left-4 p-2 rounded-lg bg-highlight/10 text-highlight border border-highlight/20 hover:bg-highlight/20 transition-all hover:scale-110 active:scale-95 shadow-[0_0_10px_rgba(236,72,153,0.1)]"
+            title="Hear word"
+          >
+            <Volume2 size={20} />
+          </button>
+          <h2 className="text-xl sm:text-3xl font-black tracking-widest uppercase text-highlight mb-1 sm:mb-2 italic">Word Scramble</h2>
+          <p className="text-text-secondary text-xs sm:text-sm italic leading-tight px-6 sm:px-0">
             {isLoading ? "Consulting AI Archive..." : `"${wordInfo?.definition}"`}
           </p>
           
@@ -144,20 +153,20 @@ export default function WordScramble({ unit, onBack, onWordMastered, onGameFinis
               <motion.div 
                 initial={{ opacity: 0, y: 5 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="flex justify-center gap-2 mt-4"
+                className="flex justify-center gap-2 mt-3 sm:mt-4"
               >
-                <span className="px-2 py-0.5 bg-accent/10 border border-accent/20 rounded text-[10px] font-bold text-accent uppercase tracking-tighter">UZ: {wordInfo?.uz}</span>
-                <span className="px-2 py-0.5 bg-highlight/10 border border-highlight/20 rounded text-[10px] font-bold text-highlight uppercase tracking-tighter">RU: {wordInfo?.ru}</span>
+                <span className="px-2 py-0.5 bg-accent/10 border border-accent/20 rounded text-[9px] sm:text-[10px] font-bold text-accent uppercase tracking-tighter">UZ: {wordInfo?.uz}</span>
+                <span className="px-2 py-0.5 bg-highlight/10 border border-highlight/20 rounded text-[9px] sm:text-[10px] font-bold text-highlight uppercase tracking-tighter">RU: {wordInfo?.ru}</span>
               </motion.div>
             )}
           </AnimatePresence>
         </div>
 
-        <div className="p-8 space-y-8">
-          <div className="flex flex-wrap justify-center gap-3">
+        <div className="p-4 sm:p-8 space-y-6 sm:space-y-8">
+          <div className="flex flex-wrap justify-center gap-2 sm:gap-3">
             {isLoading ? (
               <div className="py-6 flex gap-2">
-                {[1,2,3,4].map(i => <div key={i} className="w-12 h-12 bg-bg border border-border rounded-xl animate-pulse" />)}
+                {[1,2,3,4].map(i => <div key={i} className="w-10 h-10 sm:w-14 sm:h-14 bg-bg border border-border rounded-xl animate-pulse" />)}
               </div>
             ) : (
               scrambledWord.split('').map((char, idx) => (
@@ -166,7 +175,7 @@ export default function WordScramble({ unit, onBack, onWordMastered, onGameFinis
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ delay: idx * 0.05 }}
-                  className="w-14 h-14 bg-bg border-2 border-border rounded-xl flex items-center justify-center text-2xl font-black text-highlight shadow-[0_0_10px_rgba(236,72,153,0.1)] transition-colors"
+                  className="w-10 h-10 sm:w-14 sm:h-14 bg-bg border-2 border-border rounded-lg sm:rounded-xl flex items-center justify-center text-xl sm:text-2xl font-black text-highlight shadow-[0_0_10px_rgba(236,72,153,0.1)] transition-colors"
                 >
                   {char}
                 </motion.div>
@@ -182,7 +191,7 @@ export default function WordScramble({ unit, onBack, onWordMastered, onGameFinis
               value={userInput}
               onInput={(e: any) => setUserInput(e.target.value)}
               placeholder="Your guess..."
-              className={`w-full text-center text-4xl font-black py-8 tracking-[0.2em] bg-bg border-4 rounded-2xl outline-none transition-all uppercase ${
+              className={`w-full text-center text-xl sm:text-4xl font-black py-5 sm:py-8 tracking-tight sm:tracking-[0.2em] bg-bg border-4 rounded-2xl outline-none transition-all uppercase ${
                 feedback === 'correct' ? 'border-highlight bg-highlight/5' : 
                 feedback === 'wrong' ? 'border-highlight bg-highlight/5 animate-shake' : 
                 'border-border focus:border-highlight focus:bg-surface text-text-primary'
